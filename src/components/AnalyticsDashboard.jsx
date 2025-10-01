@@ -4,13 +4,14 @@ import {
   LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 
-const AnalyticsDashboard = ({ prediction, formData }) => {
+const AnalyticsDashboard = ({ prediction, carData }) => {
   // Sample data for visualization
   const priceFactors = [
     { factor: 'Mileage', impact: Math.round(prediction.factors.mileage), color: '#8884d8' },
     { factor: 'Age', impact: Math.round(prediction.factors.age), color: '#82ca9d' },
     { factor: 'Power', impact: Math.round(prediction.factors.power), color: '#ffc658' },
-    { factor: 'Fuel Efficiency', impact: Math.round(prediction.factors.fuel), color: '#ff7300' }
+    { factor: 'Fuel Efficiency', impact: Math.round(prediction.factors.fuel), color: '#ff7300' },
+    { factor: 'Brand', impact: Math.round(prediction.factors.brand), color: '#00c49f' }
   ];
 
   const marketTrends = [
@@ -115,7 +116,7 @@ const AnalyticsDashboard = ({ prediction, formData }) => {
             <div className="position-item">
               <span className="position-label">Depreciation Rate:</span>
               <span className="position-value">
-                {Math.round((formData.car_age / formData.year) * 100)}% per year
+                {Math.round(((2024 - carData.year) / carData.year) * 100)}% per year
               </span>
             </div>
           </div>

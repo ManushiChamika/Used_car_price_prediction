@@ -82,6 +82,29 @@
   background: white;
 }
 
+.input-group select {
+  padding: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.input-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.input-group select:hover {
+  border-color: #cbd5e0;
+  background: white;
+}
+
 .predict-button {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -223,6 +246,10 @@
 
 .price-breakdown li.negative {
   color: #e53e3e;
+}
+
+.price-breakdown li.neutral {
+  color: #718096;
 }
 
 @keyframes fadeInUp {
