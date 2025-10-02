@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './CarPricePredictor.css';
 import AnalyticsDashboard from './AnalyticsDashboard';
+import Recommendations from './Recommendations';
 
 const CarPricePredictor = () => {
   const [carData, setCarData] = useState({
@@ -19,6 +20,9 @@ const CarPricePredictor = () => {
 
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [recsLoading, setRecsLoading] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [history, setHistory] = useState([]);
   const [options, setOptions] = useState({
     brands: [],
     colors: [],
@@ -47,6 +51,14 @@ const CarPricePredictor = () => {
     loadOptions();
   }, []);
 
+  // Load history from localStorage once
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('ucp_history') || '[]');
+      setHistory(Array.isArray(saved) ? saved : []);
+    } catch {}
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCarData({
@@ -69,6 +81,13 @@ const CarPricePredictor = () => {
       
       if (result.success) {
         setPrediction(result);
+        // Save to history (max 10)
+        const entry = { timestamp: Date.now(), input: carData, output: result };
+        const next = [entry, ...history].slice(0, 10);
+        setHistory(next);
+        try { localStorage.setItem('ucp_history', JSON.stringify(next)); } catch {}
+        // Fetch recommendations
+        fetchRecommendations(result);
       } else {
         console.error('Prediction failed:', result.error);
       }
@@ -76,6 +95,27 @@ const CarPricePredictor = () => {
       console.error('Prediction error:', error);
     }
     setLoading(false);
+  };
+
+  const fetchRecommendations = async (pred) => {
+    setRecsLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...carData, predicted_price: pred?.predicted_price })
+      });
+      const res = await response.json();
+      if (res.success) {
+        setRecommendations(res.items || []);
+      } else {
+        setRecommendations([]);
+      }
+    } catch (e) {
+      console.error('Recommend error:', e);
+      setRecommendations([]);
+    }
+    setRecsLoading(false);
   };
 
   return (
@@ -306,6 +346,34 @@ const CarPricePredictor = () => {
         {/* Analytics Dashboard */}
         {prediction && (
           <AnalyticsDashboard prediction={prediction} carData={carData} />
+        )}
+
+        {/* Recommendations */}
+        {prediction && (
+          <Recommendations
+            loading={recsLoading}
+            items={recommendations}
+            targetPrice={prediction.predicted_price}
+          />
+        )}
+
+        {/* Recent History */}
+        {history.length > 0 && (
+          <div className="history-section">
+            <h3>🕘 Recent Estimates</h3>
+            <div className="history-grid">
+              {history.slice(0, 6).map((h) => (
+                <div key={h.timestamp} className="history-card" title={new Date(h.timestamp).toLocaleString()}>
+                  <div className="history-price">€{h.output?.predicted_price?.toLocaleString?.() || '—'}</div>
+                  <div className="history-meta">
+                    <span>{h.input.brand}</span>
+                    <span>• {h.input.year}</span>
+                    <span>• {h.input.power_ps} PS</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
